@@ -6,10 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hamburger) {
         hamburger.addEventListener('click', () => {
             navLinks.classList.toggle('active');
-            
+
             // Toggle Icon between Bars and Times (Close)
             const icon = hamburger.querySelector('i');
-            if(navLinks.classList.contains('active')) {
+            if (navLinks.classList.contains('active')) {
                 icon.classList.remove('fa-bars');
                 icon.classList.add('fa-times');
             } else {
@@ -36,23 +36,101 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Form Submission (Simulated)
+    // Form Submission with Validation
     const form = document.getElementById('enquiryForm');
+
+    // Helper validation regex
+    const patterns = {
+        name: /^[a-zA-Z\s]{3,}$/, // Min 3 chars, letters only
+        email: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/,
+        phone: /^[0-9+]{10,15}$/, // 10-15 digits, allows +
+        message: /^[\s\S]{10,}$/ // Min 10 chars
+    };
+
+    const validateField = (field, regex) => {
+        const value = field.value.trim();
+        const parent = field.parentElement;
+        // Remove existing error
+        const existingError = parent.querySelector('.error-msg');
+        if (existingError) existingError.remove();
+
+        if (!regex.test(value)) {
+            field.style.borderColor = 'red';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-msg';
+            errorDiv.style.color = 'red';
+            errorDiv.style.fontSize = '0.8rem';
+            errorDiv.style.marginTop = '5px';
+
+            if (field.id === 'name') errorDiv.innerText = 'Name must be at least 3 letters.';
+            if (field.id === 'email') errorDiv.innerText = 'Please enter a valid email address.';
+            if (field.id === 'phone') errorDiv.innerText = 'Phone must be 10-15 digits.';
+            if (field.id === 'message') errorDiv.innerText = 'Message must be at least 10 characters.';
+
+            parent.appendChild(errorDiv);
+            return false;
+        } else {
+            field.style.borderColor = '#ddd'; // Restore default (adjust color if needed)
+            return true;
+        }
+    };
+
     if (form) {
+        // Real-time validation
+        form.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', (e) => {
+                if (patterns[e.target.id]) {
+                    validateField(e.target, patterns[e.target.id]);
+                }
+            });
+        });
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+
+            const nameValid = validateField(document.getElementById('name'), patterns.name);
+            const emailValid = validateField(document.getElementById('email'), patterns.email);
+            const phoneValid = validateField(document.getElementById('phone'), patterns.phone);
+            const messageValid = validateField(document.getElementById('message'), patterns.message);
+
+            if (!nameValid || !emailValid || !phoneValid || !messageValid) {
+                // Shake animation or focus first invalid
+                return;
+            }
+
             const btn = form.querySelector('button[type="submit"]');
             const originalText = btn.innerText;
 
             btn.innerText = 'Sending...';
             btn.style.opacity = '0.7';
+            btn.disabled = true;
 
-            setTimeout(() => {
-                alert('Thank you! Your enquiry has been sent. We will contact you shortly.');
-                form.reset();
-                btn.innerText = originalText;
-                btn.style.opacity = '1';
-            }, 1000);
+            const formData = new FormData(form);
+
+            fetch('send_email.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        form.reset();
+                        // Reset bordes
+                        form.querySelectorAll('input, textarea').forEach(i => i.style.borderColor = '#ddd');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Connection error. Please try again.');
+                })
+                .finally(() => {
+                    btn.innerText = originalText;
+                    btn.style.opacity = '1';
+                    btn.disabled = false;
+                });
         });
     }
 
