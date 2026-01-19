@@ -1,0 +1,140 @@
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-gold {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 172, 24, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 172, 24, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 172, 24, 0);
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+@keyframes shine {
+    0% {
+        left: -50%;
+    }
+
+    100% {
+        left: 150%;
+    }
+}
+
+/* Applying Animations */
+.hero h1 {
+    animation: fadeInUp 1s ease-out forwards;
+}
+
+.hero p {
+    animation: fadeInUp 1s ease-out 0.3s forwards;
+    opacity: 0;
+    /* visible by animation */
+}
+
+.hero-btns {
+    animation: fadeInUp 1s ease-out 0.6s forwards;
+    opacity: 0;
+}
+
+.btn-primary {
+    animation: pulse-gold 2s infinite;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    /* Create stacking context */
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    /* Start further back */
+    width: 50%;
+    /* Wider shine */
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    /* Gradient shine instead of block */
+    transform: skewX(-25deg);
+    animation: shine 4s infinite;
+    z-index: -1;
+    /* Behind text but on top of background? No, behind text only. */
+    pointer-events: none;
+}
+
+/* Because btn-primary has background on itself, z-index -1 puts it behind the button background. 
+   We need the text to be above. We can't easily change HTML structure to add span without replacing HTML.
+   So let's use a subtle blend mode or just make the shine semi-transparent white ON TOP.
+   The previous issue was likely opaque-ish artifact. 
+   Lets try mix-blend-mode: overlay if possible, or just very subtle.
+*/
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 30%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: skewX(-25deg);
+    animation: shine 3s infinite;
+    z-index: 1;
+    /* On top of button bg */
+}
+
+/* To ensure text is on top, we'd need a span... 
+   But simpler: Let's make the shine very subtle so it doesn't obscure text.
+*/
+
+.about-image .image-placeholder {
+    animation: float 6s ease-in-out infinite;
+}
+
+.features-list li {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease-out;
+}
+
+.features-list li.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.gallery-item {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+}
+
+.gallery-item:hover {
+    transform: translateY(-10px) scale(1.02);
+}
