@@ -105,26 +105,21 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.opacity = '0.7';
             btn.disabled = true;
 
-            const formData = new FormData(form);
+            // Use EmailJS to send form
+            // Service ID: 'service_gmail' (You need to create this in EmailJS dashboard connected to Gmail)
+            // Template ID: 'template_contact' (Create this in EmailJS)
+            const serviceID = 'default_service';
+            const templateID = 'template_contact';
 
-            fetch('send_email.php', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(data.message);
-                        form.reset();
-                        // Reset bordes
-                        form.querySelectorAll('input, textarea').forEach(i => i.style.borderColor = '#ddd');
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Connection error. Please try again.');
+            emailjs.sendForm(serviceID, templateID, form)
+                .then(() => {
+                    alert('Thank you! Your enquiry has been sent successfully.');
+                    form.reset();
+                    // Reset bordes
+                    form.querySelectorAll('input, textarea').forEach(i => i.style.borderColor = '#ddd');
+                }, (err) => {
+                    console.error('EmailJS Error:', err);
+                    alert('Failed to send message. Please check your internet connection.');
                 })
                 .finally(() => {
                     btn.innerText = originalText;
