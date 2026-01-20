@@ -85,48 +85,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', () => {
+                const nameValid = validateField(document.getElementById('name'), patterns.name);
+                const emailValid = validateField(document.getElementById('email'), patterns.email);
+                const phoneValid = validateField(document.getElementById('phone'), patterns.phone);
+                const messageValid = validateField(document.getElementById('message'), patterns.message);
 
-            const nameValid = validateField(document.getElementById('name'), patterns.name);
-            const emailValid = validateField(document.getElementById('email'), patterns.email);
-            const phoneValid = validateField(document.getElementById('phone'), patterns.phone);
-            const messageValid = validateField(document.getElementById('message'), patterns.message);
+                if (!nameValid || !emailValid || !phoneValid || !messageValid) {
+                    return;
+                }
 
-            if (!nameValid || !emailValid || !phoneValid || !messageValid) {
-                // Shake animation or focus first invalid
-                return;
-            }
+                const originalText = submitBtn.value;
+                submitBtn.value = 'Sending...';
+                submitBtn.style.opacity = '0.7';
+                submitBtn.disabled = true;
 
-            const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
+                const formData = new FormData(form);
 
-            btn.innerText = 'Sending...';
-            btn.style.opacity = '0.7';
-            btn.disabled = true;
-
-            // Use EmailJS to send form
-            // Service ID: 'service_gmail' (You need to create this in EmailJS dashboard connected to Gmail)
-            // Template ID: 'template_contact' (Create this in EmailJS)
-            const serviceID = 'default_service';
-            const templateID = 'template_contact';
-
-            emailjs.sendForm(serviceID, templateID, form)
-                .then(() => {
-                    alert('Thank you! Your enquiry has been sent successfully.');
-                    form.reset();
-                    // Reset bordes
-                    form.querySelectorAll('input, textarea').forEach(i => i.style.borderColor = '#ddd');
-                }, (err) => {
-                    console.error('EmailJS Error:', err);
-                    alert('Failed to send message. Please check your internet connection.');
+                fetch('send_email.php', {
+                    method: 'POST',
+                    body: formData
                 })
-                .finally(() => {
-                    btn.innerText = originalText;
-                    btn.style.opacity = '1';
-                    btn.disabled = false;
-                });
-        });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert(data.message);
+                            form.reset();
+                            form.querySelectorAll('input, textarea').forEach(i => i.style.borderColor = '#ddd');
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to send message. Please check your internet connection.');
+                    })
+                    .finally(() => {
+                        submitBtn.value = originalText;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.disabled = false;
+                    });
+            });
+        }
     }
 
     // Scroll Reveal Animation (Simple version)
